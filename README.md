@@ -1,4 +1,4 @@
-# Agents — Microservices Platform
+# Agents and Workflows —  Platform
 
 A production-ready **Node.js / TypeScript** microservices platform with a **Next.js** frontend, built on Docker Compose. Provides AI agent orchestration, workflow automation, authentication, and notifications with support for multiple LLM providers (OpenAI, Anthropic, Google Gemini, Mistral, Azure, Ollama, and custom endpoints).
 
