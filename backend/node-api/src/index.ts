@@ -13,6 +13,10 @@ import workflowRoutes from './routes/workflows';
 import runRoutes from './routes/runs';
 import paymentRoutes from './routes/payments';
 import aiRoutes from './routes/ai';
+import knowledgeBaseRoutes from './routes/knowledge-base';
+import logsRoutes from './routes/logs';
+import toolsRoutes from './routes/tools';
+import webhooksRoutes from './routes/webhooks';
 
 const PORT = Number(process.env.PORT || 4000);
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -48,6 +52,10 @@ app.use('/api/workflows', workflowRoutes);
 app.use('/api/runs', runRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/kb', knowledgeBaseRoutes);
+app.use('/api/logs', logsRoutes);
+app.use('/api/tools', toolsRoutes);
+app.use('/api/webhooks', webhooksRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });

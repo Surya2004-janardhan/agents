@@ -32,6 +32,12 @@ model User {
   runs         Run[]
   auditLogs    AuditLog[]
   usageDaily   UsageDaily[]
+  knowledgeBases KnowledgeBase[]
+  executionLogs ExecutionLog[]
+  tools        Tool[]
+  toolUsages   ToolUsage[]
+  webhooks     Webhook[]
+  events       Event[]
 
   @@unique([provider, providerId])
   @@map("users")
@@ -182,4 +188,160 @@ model Subscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("subscriptions")
+
+// ─── Knowledge Base / RAG ───────────────────────────────────────────────────
+model KnowledgeBase {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents KnowledgeBaseDocument[]
+
+  @@map("knowledge_bases")
+}
+
+model KnowledgeBaseDocument {
+  id             String   @id @default(uuid())
+  knowledgeBaseId String
+  fileName       String
+  fileUrl        String
+  fileSize       Int
+  fileType       String
+  textContent    String   @db.Text
+  embedding      String?  @db.Text
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  knowledgeBase KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+
+  @@map("knowledge_base_documents")
+}
+
+// ─── Advanced Logging & Tracing ────────────────────────────────────────────
+model ExecutionLog {
+  id          String   @id @default(uuid())
+  runId       String   @unique
+  userId      String
+  agentId     String?
+  workflowId  String?
+  status      String
+  startedAt   DateTime
+  completedAt DateTime?
+  duration    Int?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  steps ExecutionStep[]
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("execution_logs")
+}
+
+model ExecutionStep {
+  id             String   @id @default(uuid())
+  executionLogId String
+  stepNumber     Int
+  name           String
+  status         String
+  input          Json?
+  output         Json?
+  error          String?
+  duration       Int?
+  tokens        Int?
+  timestamps     Json?
+  createdAt      DateTime @default(now())
+
+  executionLog ExecutionLog @relation(fields: [executionLogId], references: [id], onDelete: Cascade)
+
+  @@map("execution_steps")
+}
+
+// ─── Tool Integration ──────────────────────────────────────────────────────
+model Tool {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  description String?
+  category    String
+  enabled     Boolean  @default(true)
+  config      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("tools")
+}
+
+model ToolUsage {
+  id         String   @id @default(uuid())
+  userId     String
+  runId      String
+  toolName   String
+  input      Json?
+  output     Json?
+  error      String?
+  duration   Int?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("tool_usage")
+}
+
+// ─── Webhooks & Events ────────────────────────────────────────────────────
+model Webhook {
+  id      String   @id @default(uuid())
+  userId  String
+  url     String
+  events  String[] @default([])
+  active  Boolean  @default(true)
+  secret  String
+  retries Int      @default(3)
+  timeout Int      @default(30000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@map("webhooks")
+}
+
+model Event {
+  id         String   @id @default(uuid())
+  userId     String
+  type       String
+  runId      String?
+  workflowId String?
+  agentId    String?
+  payload    Json?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("events")
+}
+
+model WebhookDelivery {
+  id          String   @id @default(uuid())
+  webhookId   String
+  eventType   String
+  payload     Json
+  status      Int?
+  response    String?
+  attempts    Int      @default(0)
+  nextRetry   DateTime?
+  deliveredAt DateTime?
+  createdAt   DateTime @default(now())
+
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@map("webhook_deliveries")
+}
 }
