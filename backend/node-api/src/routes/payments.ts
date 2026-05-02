@@ -1,92 +1,89 @@
 import { Router, Request, Response } from 'express';
-import Stripe from 'stripe';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-  apiVersion: '2024-06-20',
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'placeholder_secret',
 });
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+// POST /api/payments/order — create Razorpay order
+router.post('/order', authenticate, async (req: AuthRequest, res: Response) => {
+  const { amount, currency = 'INR' } = req.body; // Amount in paise (e.g., 50000 for ₹500)
 
-// POST /api/payments/checkout — create Stripe checkout session
-router.post('/checkout', authenticate, async (req: AuthRequest, res: Response) => {
-  const priceId = process.env.STRIPE_PRO_PRICE_ID || '';
-  if (!priceId) {
-    res.status(503).json({ error: 'Payments not configured' });
-    return;
+  try {
+    const options = {
+      amount,
+      currency,
+      receipt: `receipt_${req.user!.sub.slice(0, 8)}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+    
+    // Store customer reference if needed
+    await prisma.subscription.upsert({
+      where: { userId: req.user!.sub },
+      update: { externalCustomerId: order.id },
+      create: { userId: req.user!.sub, externalCustomerId: order.id, plan: 'free', status: 'pending' },
+    });
+
+    res.json({ order });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
-
-  // Get or create Stripe customer
-  let sub = await prisma.subscription.findUnique({ where: { userId: req.user!.sub } });
-  let customerId = sub?.stripeCustomerId;
-
-  if (!customerId) {
-    const user = await prisma.user.findUnique({ where: { id: req.user!.sub } });
-    const customer = await stripe.customers.create({ email: user?.email || '' });
-    customerId = customer.id;
-    if (sub) {
-      await prisma.subscription.update({ where: { userId: req.user!.sub }, data: { stripeCustomerId: customerId } });
-    } else {
-      await prisma.subscription.create({ data: { userId: req.user!.sub, stripeCustomerId: customerId } });
-    }
-  }
-
-  const session = await stripe.checkout.sessions.create({
-    customer: customerId,
-    payment_method_types: ['card'],
-    line_items: [{ price: priceId, quantity: 1 }],
-    mode: 'subscription',
-    success_url: `${FRONTEND_URL}/dashboard/settings?payment=success`,
-    cancel_url: `${FRONTEND_URL}/dashboard/settings?payment=cancelled`,
-  });
-
-  res.json({ url: session.url });
 });
 
-// POST /api/payments/webhook — Stripe webhook
-router.post(
-  '/webhook',
-  // raw body needed for stripe signature verification — mount before express.json()
-  async (req: Request, res: Response) => {
-    const sig = req.headers['stripe-signature'] as string;
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+// POST /api/payments/verify — Verify Razorpay payment signature
+router.post('/verify', authenticate, async (req: AuthRequest, res: Response) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-    let event: Stripe.Event;
-    try {
-      event = stripe.webhooks.constructEvent(req.body as Buffer, sig, webhookSecret);
-    } catch {
-      res.status(400).json({ error: 'Webhook signature invalid' });
-      return;
+  const sign = razorpay_order_id + "|" + razorpay_payment_id;
+  const expectedSign = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || '')
+    .update(sign.toString())
+    .digest("hex");
+
+  if (razorpay_signature === expectedSign) {
+    await prisma.subscription.update({
+      where: { userId: req.user!.sub },
+      data: { plan: 'pro', status: 'active' },
+    });
+    res.json({ success: true, message: "Payment verified successfully" });
+  } else {
+    res.status(400).json({ success: false, message: "Invalid signature" });
+  }
+});
+
+// POST /api/payments/webhook — Razorpay Webhook
+router.post('/webhook', async (req: Request, res: Response) => {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET || '';
+  const signature = req.headers['x-razorpay-signature'] as string;
+
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(req.body))
+    .digest('hex');
+
+  if (signature === expectedSignature) {
+    const { event, payload } = req.body;
+    
+    if (event === 'payment.captured') {
+      const orderId = payload.payment.entity.order_id;
+      await prisma.subscription.updateMany({
+        where: { externalCustomerId: orderId },
+        data: { plan: 'pro', status: 'active' },
+      });
     }
-
-    switch (event.type) {
-      case 'customer.subscription.updated':
-      case 'customer.subscription.created': {
-        const s = event.data.object as Stripe.Subscription;
-        const customerId = typeof s.customer === 'string' ? s.customer : s.customer.id;
-        await prisma.subscription.updateMany({
-          where: { stripeCustomerId: customerId },
-          data: { plan: 'pro', status: s.status },
-        });
-        break;
-      }
-      case 'customer.subscription.deleted': {
-        const s = event.data.object as Stripe.Subscription;
-        const customerId = typeof s.customer === 'string' ? s.customer : s.customer.id;
-        await prisma.subscription.updateMany({
-          where: { stripeCustomerId: customerId },
-          data: { plan: 'free', status: 'cancelled' },
-        });
-        break;
-      }
-    }
-
-    res.json({ received: true });
-  },
-);
+    
+    res.json({ status: 'ok' });
+  } else {
+    res.status(400).send('Invalid signature');
+  }
+});
 
 // GET /api/payments/subscription — get current user subscription
 router.get('/subscription', authenticate, async (req: AuthRequest, res: Response) => {

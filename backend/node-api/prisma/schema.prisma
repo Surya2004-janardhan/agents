@@ -198,7 +198,7 @@ model Session {
 model Subscription {
   id               String   @id @default(uuid())
   userId           String   @unique
-  stripeCustomerId String?
+  externalCustomerId String?
   plan             String   @default("free")
   status           String   @default("active")
   createdAt        DateTime @default(now())

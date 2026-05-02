@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: '/workflows', label: 'Workflows', hint: 'Curated' },
   { href: '/schedule', label: 'Schedule', hint: 'Cron' },
   { href: '/credentials', label: 'Identity', hint: 'OAuth' },
+  { href: '/billing', label: 'Billing', hint: 'Upgrade' },
   { href: '/runs', label: 'Runs', hint: 'History' },
 ];
 
@@ -20,10 +21,10 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
     <div className={styles.shell}>
       <header className={styles.navbar}>
         <Link href="/" className={styles.brand}>
-          <span className={styles.brandMark} />
+          <img src="/assets/logo.png" alt="Meooww Logo" className={styles.brandMark} style={{ width: '32px', height: '32px', borderRadius: '8px' }} />
           <span>
-            <span className={styles.brandName}>Signal Forge</span>
-            <span className={styles.brandTag}>Curated agents and scheduled workflows</span>
+            <span className={styles.brandName}>Meooww</span>
+            <span className={styles.brandTag}>Purr-fect agents & scheduled workflows</span>
           </span>
         </Link>
 
@@ -38,6 +39,15 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+
+        <div className={styles.nav} style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
+          <Link href="/privacy" className={styles.navLink} style={{ padding: '8px 16px', opacity: 0.6 }}>
+            <span className={styles.navLabel} style={{ fontSize: '12px' }}>Privacy Policy</span>
+          </Link>
+          <Link href="/terms" className={styles.navLink} style={{ padding: '8px 16px', opacity: 0.6 }}>
+            <span className={styles.navLabel} style={{ fontSize: '12px' }}>Terms of Service</span>
+          </Link>
+        </div>
       </header>
 
       <main className={styles.content}>{children}</main>
