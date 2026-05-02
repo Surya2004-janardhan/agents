@@ -4,47 +4,47 @@ import styles from './app.module.css';
 const quickRoutes = [
   {
     href: '/agents',
-    title: 'Approved agents',
-    text: 'Choose from curated agents instead of building new ones from scratch.',
-    tags: ['Read only', 'Template based'],
+    title: 'Autonomous Agents',
+    text: 'Deploy high-performance, curated agents designed for complex reasoning and multi-step execution.',
+    tags: ['Production Ready', 'Adaptive Memory'],
   },
   {
     href: '/workflows',
-    title: 'Curated workflows',
-    text: 'Use predefined workflows that can be scheduled and run on demand.',
-    tags: ['No builder', 'Predefined'],
+    title: 'Curated Workflows',
+    text: 'Scale your operations with pre-orchestrated workflows that handle repetitive tasks with precision.',
+    tags: ['Low Latency', 'High Throughput'],
   },
   {
     href: '/schedule',
-    title: 'Cron schedules',
-    text: 'Set recurring jobs for workflows with a simple cron expression.',
-    tags: ['Cron', 'Enabled toggle'],
+    title: 'Intelligent Scheduling',
+    text: 'Automate your agents with sophisticated cron scheduling and event-driven triggers.',
+    tags: ['Auto-scale', 'Persistent'],
   },
 ];
 
 export default function HomePage() {
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} animate-fade-in`}>
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <div className={styles.kicker}>
-            <span className={styles.badge}>Curated workbench</span>
-            <span>Defined agents, predefined workflows, and cron scheduling</span>
+            <span className={styles.badge}>Next-Gen Orchestration</span>
+            <span>Unleash the power of persistent memory</span>
           </div>
-          <h1 className={styles.title}>A focused system for agent runs and scheduled workflows.</h1>
+          <h1 className={styles.title}>The Future of Agentic Workflows.</h1>
           <p className={styles.subtitle}>
-            Users do not build workflows here. They pick approved agents, choose from curated workflows, and set
-            schedules in a simple way. The interface stays compact and the backend does the heavy lifting.
+            A premium workbench for deploying approved agents, scaling curated workflows, and managing 
+            intelligent schedules with the power of long-term adaptive memory.
           </p>
           <div className={styles.heroActions}>
             <Link href="/agents" className={styles.primaryButton}>
-              Explore agents
+              Launch Agents
             </Link>
             <Link href="/workflows" className={styles.secondaryButton}>
-              View workflows
+              Explore Workflows
             </Link>
             <Link href="/schedule" className={styles.ghostButton}>
-              Set schedule
+              Configure Cron
             </Link>
           </div>
         </div>
@@ -53,16 +53,21 @@ export default function HomePage() {
       <section className={styles.sectionCard}>
         <div className={styles.sectionHeader}>
           <div>
-            <div className={styles.sectionLabel}>Routes</div>
-            <h2 className={styles.sectionTitle}>Choose one clear action</h2>
+            <div className={styles.sectionLabel}>Operations</div>
+            <h2 className={styles.sectionTitle}>Precision Control</h2>
           </div>
-          <span className={styles.pill}>Clear navigation</span>
+          <span className={styles.pill}>Unified Navigation</span>
         </div>
 
         <div className={styles.grid3}>
-          {quickRoutes.map((route) => (
-            <Link key={route.href} href={route.href} className={styles.routeCard}>
-              <p className={styles.routeTitle}>{route.title}</p>
+          {quickRoutes.map((route, i) => (
+            <Link 
+              key={route.href} 
+              href={route.href} 
+              className={`${styles.routeCard} glass`}
+              style={{ animationDelay: `${(i + 1) * 100}ms` }}
+            >
+              <h3 className={styles.routeTitle}>{route.title}</h3>
               <p className={styles.cardText}>{route.text}</p>
               <div className={styles.tagRow}>
                 {route.tags.map((tag) => (
@@ -75,6 +80,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+      
+      {/* Visual background elements */}
+      <div className="bg-glow" />
     </div>
   );
 }

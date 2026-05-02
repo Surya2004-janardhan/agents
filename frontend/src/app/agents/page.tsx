@@ -1,61 +1,118 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import styles from '../app.module.css';
 
-const agents = [
-  {
-    title: 'Research Brief Agent',
-    text: 'Summarizes a topic, gathers evidence, and returns a concise brief.',
-    tags: ['Research', 'Citations', 'Fast'],
-  },
-  {
-    title: 'Support Triage Agent',
-    text: 'Classifies incoming requests and prepares an answer draft.',
-    tags: ['Support', 'Triage', 'Draft'],
-  },
-  {
-    title: 'Meeting Prep Agent',
-    text: 'Turns context into an agenda, highlights, and next steps.',
-    tags: ['Meetings', 'Agenda', 'Notes'],
-  },
-  {
-    title: 'Workflow Refiner Agent',
-    text: 'Converts a rough task list into a structured execution plan.',
-    tags: ['Planning', 'Steps', 'Clarity'],
-  },
+const CATEGORIES = [
+  'All', 
+  'Workspace', 
+  'Social', 
+  'Cloud', 
+  'Marketing', 
+  'Research', 
+  'Operations'
 ];
 
 export default function AgentsPage() {
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [agents, setAgents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // In a real app, fetch from /api/agents/templates
+    const mockAgents = [
+      // Workspace
+      { title: 'Gmail Triage Expert', text: 'Complex email sorting and drafting.', category: 'Workspace', tags: ['Email', 'AI'], requiresOAuth: true, provider: 'google' },
+      { title: 'Sheets Data Architect', text: 'Advanced spreadsheet automation.', category: 'Workspace', tags: ['Data', 'Sheets'], requiresOAuth: true, provider: 'google' },
+      { title: 'Calendar Life Coordinator', text: 'Intelligent scheduling assistant.', category: 'Workspace', tags: ['Schedule'], requiresOAuth: true, provider: 'google' },
+      { title: 'Drive Folder Janitor', text: 'Organizes messy Google Drive folders.', category: 'Workspace', tags: ['Files'], requiresOAuth: true, provider: 'google' },
+      
+      // Social
+      { title: 'YouTube Growth Hacker', text: 'YouTube Analytics & SEO strategy.', category: 'Social', tags: ['Video', 'SEO'], requiresOAuth: true, provider: 'google' },
+      { title: 'Instagram Visual Strategist', text: 'Captions and visual planning.', category: 'Social', tags: ['Photos', 'Tags'], requiresOAuth: true, provider: 'instagram' },
+      { title: 'GitHub Repo Orchestrator', text: 'Issues, PRs, and code review.', category: 'Social', tags: ['Git', 'Code'], requiresOAuth: true, provider: 'github' },
+      { title: 'Twitter Engagement Lead', text: 'Threads and viral tweet drafting.', category: 'Social', tags: ['Tweets'], requiresOAuth: true, provider: 'google' },
+      
+      // Cloud
+      { title: 'BigQuery Data Scientist', text: 'Advanced SQL and data modeling.', category: 'Cloud', tags: ['SQL', 'BigData'], requiresOAuth: true, provider: 'google' },
+      { title: 'GCS Infrastructure Bot', text: 'Bucket and object management.', category: 'Cloud', tags: ['Storage'], requiresOAuth: true, provider: 'google' },
+      { title: 'Cloud Logging Detective', text: 'Sifts through logs for errors.', category: 'Cloud', tags: ['SRE', 'Logs'], requiresOAuth: true, provider: 'google' },
+      
+      // Marketing
+      { title: 'AdSense Profit Scout', description: 'Revenue and ad unit optimization.', category: 'Marketing', tags: ['Revenue'], requiresOAuth: true, provider: 'google' },
+      { title: 'Campaign 360 Strategist', description: 'Full-funnel campaign management.', category: 'Marketing', tags: ['Ads'], requiresOAuth: true, provider: 'google' },
+      { title: 'SEO Keyword Stalker', description: 'Search Console and keyword trends.', category: 'Marketing', tags: ['SEO'], requiresOAuth: true, provider: 'google' },
+      
+      // Research & Ops
+      { title: 'Scientific Research Peer', description: 'Literature review and synthesis.', category: 'Research', tags: ['Science'], requiresOAuth: false },
+      { title: 'Legal Brief Assistant', description: 'Case law and document drafting.', category: 'Research', tags: ['Legal'], requiresOAuth: false },
+      { title: 'Expense Audit Bot', description: 'Scans receipts and logs expenses.', category: 'Operations', tags: ['Finance'], requiresOAuth: true, provider: 'google' },
+      { title: 'Travel Concierge', description: 'Itinerary planning and booking.', category: 'Operations', tags: ['Travel'], requiresOAuth: true, provider: 'google' },
+    ];
+    setAgents(mockAgents);
+    setLoading(false);
+  }, []);
+
+  const filteredAgents = activeCategory === 'All' 
+    ? agents 
+    : agents.filter(a => a.category === activeCategory);
+
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} animate-fade-in`}>
       <section className={styles.sectionCard}>
         <div className={styles.sectionHeader}>
           <div>
-            <div className={styles.sectionLabel}>Agents</div>
-            <h1 className={styles.sectionTitle}>Approved agents only</h1>
+            <div className={styles.sectionLabel}>Autonomous Agents</div>
+            <h1 className={styles.sectionTitle}>Curated Intelligence</h1>
           </div>
-          <span className={styles.pill}>No creation flow</span>
+          <span className={styles.pill}>Ready to Deploy</span>
         </div>
         <p className={styles.sectionText}>
-          Users choose from the curated agents below. Each one is ready to run, and the backend handles the actual
-          execution logic.
+          Deploy high-performance agents designed for specific outcomes. Each agent is optimized for 
+          precision and can securely access your social platforms with persistent OAuth.
         </p>
+
+        <div className={styles.tagRow} style={{ marginTop: '24px' }}>
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`${styles.pill} ${activeCategory === cat ? styles.badge : ''}`}
+              style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </section>
 
-      <section className={styles.routeList}>
-        {agents.map((agent) => (
-          <article key={agent.title} className={styles.listItem}>
-            <div className={styles.metaRow}>
-              <div>
-                <p className={styles.routeTitle}>{agent.title}</p>
-                <p className={styles.cardText}>{agent.text}</p>
-              </div>
-              <span className={styles.pill}>Ready</span>
+      <section className={styles.grid3}>
+        {filteredAgents.map((agent) => (
+          <article key={agent.title} className={`${styles.routeCard} glass`}>
+            <div className={styles.sectionHeader} style={{ marginBottom: '8px' }}>
+              <h3 className={styles.routeTitle}>{agent.title}</h3>
+              {agent.requiresOAuth && (
+                <span className={styles.tag} style={{ color: 'var(--accent-vibrant)', background: 'rgba(236, 72, 153, 0.1)' }}>
+                  OAuth Required
+                </span>
+              )}
             </div>
+            <p className={styles.cardText}>{agent.text}</p>
             <div className={styles.tagRow}>
-              {agent.tags.map((tag) => (
+              <span className={styles.tag} style={{ fontWeight: 700, color: 'var(--accent-primary)' }}>
+                {agent.category}
+              </span>
+              {agent.tags.map((tag: string) => (
                 <span key={tag} className={styles.tag}>
                   {tag}
                 </span>
               ))}
+            </div>
+            
+            <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
+              <button className={styles.primaryButton} style={{ width: '100%', padding: '10px' }}>
+                Launch Agent
+              </button>
             </div>
           </article>
         ))}

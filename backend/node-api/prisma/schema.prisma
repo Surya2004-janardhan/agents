@@ -38,9 +38,27 @@ model User {
   toolUsages   ToolUsage[]
   webhooks     Webhook[]
   events       Event[]
+  userCredentials UserCredential[]
 
   @@unique([provider, providerId])
   @@map("users")
+}
+
+model UserCredential {
+  id           String   @id @default(uuid())
+  userId       String
+  provider     String   // e.g., "instagram", "youtube"
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@map("user_credentials")
 }
 
 model AgentTemplate {
@@ -75,6 +93,7 @@ model Agent {
   user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   template AgentTemplate? @relation(fields: [templateId], references: [id])
   runs     Run[]
+  workflowSteps WorkflowStep[]
 
   @@map("agents")
 }
@@ -188,6 +207,7 @@ model Subscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("subscriptions")
+}
 
 // ─── Knowledge Base / RAG ───────────────────────────────────────────────────
 model KnowledgeBase {
@@ -343,5 +363,4 @@ model WebhookDelivery {
   webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
 
   @@map("webhook_deliveries")
-}
 }

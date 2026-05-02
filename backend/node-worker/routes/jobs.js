@@ -57,6 +57,7 @@ router.post("/jobs", async (req, res) => {
             ],
             temperature: agent.temperature ?? 0.7,
             maxTokens: agent.max_tokens ?? 512,
+            userId: payload.user_id,
           });
           outputs.push({
             order: step.order,
@@ -83,6 +84,7 @@ router.post("/jobs", async (req, res) => {
           messages,
           temperature: agent.temperature ?? 0.7,
           maxTokens: agent.max_tokens ?? 512,
+          userId: payload.user_id,
         });
         result = {
           status: "finished",

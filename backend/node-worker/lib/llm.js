@@ -1,4 +1,5 @@
 const fetch = globalThis.fetch || require("node-fetch");
+const memoryManager = require("./memory");
 
 async function openAiCompatible(url, apiKey, body) {
   const res = await fetch(url, {
@@ -48,70 +49,107 @@ async function ollamaRequest(baseUrl, body) {
 }
 
 module.exports = {
-  async runCompletion({ provider, model, messages, temperature, maxTokens }) {
-    // simple compatible implementation supporting OpenAI-compatible, Anthropic, Google and Ollama
-    const system = messages.find((m) => m.role === "system")?.content;
+const toolBridge = require("./tools");
 
-    if (provider === "anthropic") {
-      const apiKey = process.env.ANTHROPIC_API_KEY;
-      const data = await anthropicRequest(apiKey, {
-        model,
-        max_tokens: maxTokens,
-        temperature,
-        system,
-        messages: messages.filter((m) => m.role !== "system"),
-      });
-      const text = Array.isArray(data.content)
-        ? data.content[0]?.text
-        : data.content?.text;
-      return { text: text || "", usage: {} };
+module.exports = {
+  async runCompletion({ provider, model, messages, temperature, maxTokens, userId }) {
+    // 1. Retrieve memories if userId is provided
+    let memoryContext = "";
+    if (userId) {
+      const lastUserMessage = messages.findLast((m) => m.role === "user")?.content;
+      if (lastUserMessage) {
+        memoryContext = await memoryManager.getRelevantContext(userId, lastUserMessage);
+      }
     }
 
-    if (provider === "google") {
-      const apiKey = process.env.GOOGLE_API_KEY;
-      const contents = [
-        ...(system ? [{ role: "user", parts: [{ text: system }] }] : []),
-        ...messages
-          .filter((m) => m.role !== "system")
-          .map((m) => ({
-            role: m.role === "assistant" ? "model" : "user",
-            parts: [{ text: m.content }],
-          })),
-      ];
-      const data = await googleRequest(apiKey, model, {
-        contents,
-        generationConfig: { temperature, maxOutputTokens: maxTokens },
-      });
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      return { text: text || "", usage: {} };
+    // 2. Inject memories into system prompt if available
+    if (memoryContext) {
+      const systemIndex = messages.findIndex((m) => m.role === "system");
+      const memoryPrompt = `\n\nPast interactions and context about this user:\n${memoryContext}`;
+      
+      if (systemIndex > -1) {
+        messages[systemIndex].content += memoryPrompt;
+      } else {
+        messages.unshift({ role: "system", content: `You are a helpful assistant.${memoryPrompt}` });
+      }
     }
 
-    if (provider === "ollama") {
-      const baseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-      const data = await ollamaRequest(baseUrl, {
-        model,
-        messages,
-        options: { temperature, num_predict: maxTokens },
-      });
-      return { text: data.message?.content || "", usage: {} };
+    // --- Agent Loop Initialization ---
+    let loopCount = 0;
+    const maxLoops = 5; // Prevent infinite loops
+    let finalResponse = null;
+
+    // Enhance system prompt for tool calling
+    const systemIndex = messages.findIndex((m) => m.role === "system");
+    const toolInstructions = `\n\nYou have access to various tools. If you need to perform an action, use the following JSON format:
+{"thought": "Your reasoning", "tool": "tool-id", "input": {"arg": "value"}}
+When you have the final answer, provide it directly without the JSON block.
+Supported tools include: google-gmail, google-sheets, google-drive, google-bigquery, google-adsense, google-blogger, youtube-analytics, github-manager, etc.`;
+
+    if (systemIndex > -1) {
+      messages[systemIndex].content += toolInstructions;
     }
 
-    // default: OpenAI-compatible
-    const baseUrl =
-      process.env.CUSTOM_LLM_BASE_URL || "https://api.openai.com/v1";
-    const apiKey = process.env.OPENAI_API_KEY;
-    const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
+    while (loopCount < maxLoops) {
+      loopCount++;
+      let responseText = "";
+      let usage = {};
 
-    const payload = { model, messages, temperature, max_tokens: maxTokens };
-    const data = await openAiCompatible(url, apiKey, payload);
-    const text = data.choices?.[0]?.message?.content || "";
-    return {
-      text: text || "",
-      usage: {
-        promptTokens: data.usage?.prompt_tokens ?? null,
-        completionTokens: data.usage?.completion_tokens ?? null,
-        totalTokens: data.usage?.total_tokens ?? null,
-      },
-    };
+      // Execute LLM request
+      if (provider === "anthropic") {
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+        const system = messages.find((m) => m.role === "system")?.content;
+        const data = await anthropicRequest(apiKey, {
+          model,
+          max_tokens: maxTokens,
+          temperature,
+          system,
+          messages: messages.filter((m) => m.role !== "system"),
+        });
+        responseText = Array.isArray(data.content) ? data.content[0]?.text : data.content?.text;
+      } else {
+        // Default: OpenAI-compatible
+        const baseUrl = process.env.CUSTOM_LLM_BASE_URL || "https://api.openai.com/v1";
+        const apiKey = process.env.OPENAI_API_KEY;
+        const url = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
+        const payload = { model, messages, temperature, max_tokens: maxTokens };
+        const data = await openAiCompatible(url, apiKey, payload);
+        responseText = data.choices?.[0]?.message?.content || "";
+        usage = data.usage || {};
+      }
+
+      // Check for tool calling JSON
+      const jsonMatch = responseText.match(/\{[\s\S]*"tool"[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const toolCall = JSON.parse(jsonMatch[0]);
+          console.log(`[Agent Loop] Loop ${loopCount}: Calling tool ${toolCall.tool}`);
+          
+          // Execute the tool via the bridge
+          const toolOutput = await toolBridge.executeTool(userId, toolCall.tool, toolCall.input);
+          
+          // Add tool output to messages and continue loop
+          messages.push({ role: "assistant", content: responseText });
+          messages.push({ role: "user", content: `Observation from ${toolCall.tool}: ${JSON.stringify(toolOutput)}` });
+          continue;
+        } catch (e) {
+          console.error("[Agent Loop] Failed to parse tool call:", e);
+        }
+      }
+
+      // No tool call or parsing failed, this is our final response
+      finalResponse = { text: responseText, usage };
+      break;
+    }
+
+    // 3. Store interaction in memory if userId is provided
+    if (userId && finalResponse?.text) {
+      const fullMessages = [...messages, { role: "assistant", content: finalResponse.text }];
+      memoryManager.addInteraction(userId, fullMessages).catch(err => 
+        console.error("Failed to add interaction to memory:", err)
+      );
+    }
+
+    return finalResponse;
   },
 };

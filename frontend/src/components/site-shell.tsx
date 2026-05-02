@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/agents', label: 'Agents', hint: 'Approved' },
   { href: '/workflows', label: 'Workflows', hint: 'Curated' },
   { href: '/schedule', label: 'Schedule', hint: 'Cron' },
+  { href: '/credentials', label: 'Identity', hint: 'OAuth' },
   { href: '/runs', label: 'Runs', hint: 'History' },
 ];
 
@@ -31,7 +32,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
             const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
             return (
               <Link key={item.href} href={item.href} className={`${styles.navLink} ${active ? styles.navLinkActive : ''}`}>
-                <span>{item.label}</span>
+                <span className={styles.navLabel}>{item.label}</span>
                 <span className={styles.navHint}>{item.hint}</span>
               </Link>
             );

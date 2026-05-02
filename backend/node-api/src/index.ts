@@ -17,6 +17,7 @@ import knowledgeBaseRoutes from './routes/knowledge-base';
 import logsRoutes from './routes/logs';
 import toolsRoutes from './routes/tools';
 import webhooksRoutes from './routes/webhooks';
+import credentialRoutes from './routes/credentials';
 
 const PORT = Number(process.env.PORT || 4000);
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -56,6 +57,7 @@ app.use('/api/kb', knowledgeBaseRoutes);
 app.use('/api/logs', logsRoutes);
 app.use('/api/tools', toolsRoutes);
 app.use('/api/webhooks', webhooksRoutes);
+app.use('/api/credentials', credentialRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });

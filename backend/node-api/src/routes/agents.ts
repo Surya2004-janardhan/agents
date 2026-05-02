@@ -1,256 +1,106 @@
-import { Router, Response } from 'express';
-import axios from 'axios';
-import { z } from 'zod';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { aiLimiter } from '../middleware/rateLimiter';
-import { validate } from '../middleware/validate';
+import { z } from 'zod';
 
 const router = Router();
-const AI_URL = process.env.AI_WORKER_URL || 'http://localhost:5000';
-const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET || '';
 
-const aiHeaders = () => ({ 'x-internal-secret': INTERNAL_SECRET });
-
-const AgentCreateSchema = z.object({
-  name: z.string().min(1).max(120),
-  description: z.string().max(500).optional(),
+const AgentSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
   templateId: z.string().uuid().optional(),
-  systemPrompt: z.string().max(4000).optional(),
-  provider: z.string().min(1),
-  model: z.string().min(1),
-  temperature: z.number().min(0).max(2).optional(),
-  maxTokens: z.number().min(64).max(8192).optional(),
-});
-
-const AgentUpdateSchema = AgentCreateSchema.partial();
-
-const AgentRunSchema = z.object({
-  input: z.string().min(1).max(8000),
   provider: z.string().min(1).optional(),
   model: z.string().min(1).optional(),
   temperature: z.number().min(0).max(2).optional(),
   maxTokens: z.number().min(64).max(8192).optional(),
-  useMemory: z.boolean().optional(),
 });
 
 const TEMPLATE_SEEDS = [
-  {
-    name: 'Email Triage Agent',
-    description: 'Drafts replies, extracts action items, and prioritizes inbox threads.',
-    category: 'Communication',
-    prompt: 'You triage inbound emails. Provide a concise response draft, a priority level, and action items.',
-    icon: 'mail',
-  },
-  {
-    name: 'Research Brief Agent',
-    description: 'Produces structured research briefs with claims, evidence, and next steps.',
-    category: 'Research',
-    prompt: 'You are a research analyst. Provide a brief with key findings, citations, and risks.',
-    icon: 'search',
-  },
-  {
-    name: 'Meeting Prep Agent',
-    description: 'Generates agenda, prep notes, and talking points from context.',
-    category: 'Productivity',
-    prompt: 'You prepare meeting agendas. Summarize context, propose agenda, and list questions.',
-    icon: 'calendar',
-  },
-  {
-    name: 'Workflow Refiner Agent',
-    description: 'Turns rough task lists into executable workflows with clear steps.',
-    category: 'Operations',
-    prompt: 'Convert the input into a clear workflow with numbered steps and owners.',
-    icon: 'layers',
-  },
+  // --- Google Workspace (1-6) ---
+  { name: 'Gmail Triage Expert', description: 'Complex email sorting and drafting.', category: 'Workspace', prompt: 'You manage Gmail. Triage, summarize, and draft replies.', icon: 'mail' },
+  { name: 'Sheets Data Architect', description: 'Advanced spreadsheet automation.', category: 'Workspace', prompt: 'You manage Sheets. Read/write data and perform analysis.', icon: 'table' },
+  { name: 'Calendar Life Coordinator', description: 'Intelligent scheduling assistant.', category: 'Workspace', prompt: 'You manage Calendar. Coordinate events and invites.', icon: 'calendar' },
+  { name: 'Drive Folder Janitor', description: 'Organizes messy Google Drive folders.', category: 'Workspace', prompt: 'You manage Drive. Organize, rename, and move files.', icon: 'folder' },
+  { name: 'Meeting Minutes Pro', description: 'Transcribes and summarizes meetings.', category: 'Workspace', prompt: 'Create agendas and meeting notes from transcripts.', icon: 'clock' },
+  { name: 'Slide Deck Drafter', description: 'Outlines presentations in Slides.', category: 'Workspace', prompt: 'Draft structured outlines for slide presentations.', icon: 'image' },
+
+  // --- Social Media (7-12) ---
+  { name: 'YouTube Growth Hacker', description: 'YouTube Analytics & SEO strategy.', category: 'Social', prompt: 'Analyze YouTube data to suggest viral strategies.', icon: 'youtube' },
+  { name: 'Instagram Visual Strategist', description: 'Captions and visual planning.', category: 'Social', prompt: 'Plan Instagram posts and hashtag strategies.', icon: 'instagram' },
+  { name: 'Blogger Content Engine', description: 'Drafts and publishes blog posts.', category: 'Social', prompt: 'Create and publish content to Blogger.', icon: 'edit' },
+  { name: 'Twitter Engagement Lead', description: 'Threads and viral tweet drafting.', category: 'Social', prompt: 'Draft engaging Twitter threads and tweets.', icon: 'twitter' },
+  { name: 'LinkedIn Thought Leader', description: 'B2B content strategy and posting.', category: 'Social', prompt: 'Create professional LinkedIn content.', icon: 'linkedin' },
+  { name: 'Pinterest Trend Spotter', description: 'Visual trend analysis and pinning.', category: 'Social', prompt: 'Identify visual trends for Pinterest boards.', icon: 'map' },
+
+  // --- Cloud & DevOps (13-18) ---
+  { name: 'BigQuery Data Scientist', description: 'Advanced SQL and data modeling.', category: 'Cloud', prompt: 'Write and run SQL on BigQuery datasets.', icon: 'database' },
+  { name: 'GCS Infrastructure Bot', description: 'Bucket and object management.', category: 'Cloud', prompt: 'Manage Google Cloud Storage buckets/files.', icon: 'cloud' },
+  { name: 'GitHub Repo Orchestrator', description: 'Issues, PRs, and code review.', category: 'Cloud', prompt: 'Manage GitHub repos, PRs, and issue triage.', icon: 'github' },
+  { name: 'Cloud Logging Detective', description: 'Sifts through logs for errors.', category: 'Cloud', prompt: 'Analyze Google Cloud Logs for troubleshooting.', icon: 'search' },
+  { name: 'Monitoring Alert Guard', description: 'Uptime and performance tracking.', category: 'Cloud', prompt: 'Manage Cloud Monitoring alerts and dashboards.', icon: 'activity' },
+  { name: 'BigQuery Cost Optimizer', description: 'Analyzes query efficiency/cost.', category: 'Cloud', prompt: 'Optimize BigQuery queries for lower cost.', icon: 'dollar' },
+
+  // --- Marketing & Growth (19-24) ---
+  { name: 'AdSense Profit Scout', description: 'Revenue and ad unit optimization.', category: 'Marketing', prompt: 'Analyze AdSense data to boost revenue.', icon: 'trending-up' },
+  { name: 'Campaign 360 Strategist', description: 'Full-funnel campaign management.', category: 'Marketing', prompt: 'Optimize digital marketing in Campaign 360.', icon: 'pie-chart' },
+  { name: 'Google Analytics Oracle', description: 'User behavior and conversion stats.', category: 'Marketing', prompt: 'Extract insights from Google Analytics 4.', icon: 'bar-chart' },
+  { name: 'SEO Keyword Stalker', description: 'Search Console and keyword trends.', category: 'Marketing', prompt: 'Analyze search trends and SEO performance.', icon: 'key' },
+  { name: 'Email Campaigner', description: 'Newsletter and blast management.', category: 'Marketing', prompt: 'Design and manage email marketing blasts.', icon: 'send' },
+  { name: 'Customer Sentiment Bot', description: 'Reviews and feedback analysis.', category: 'Marketing', prompt: 'Analyze sentiment in user reviews.', icon: 'smile' },
+
+  // --- Advanced Operations (25-30) ---
+  { name: 'Scientific Research Peer', description: 'Literature review and synthesis.', category: 'Research', prompt: 'Perform scientific research and summarize papers.', icon: 'book' },
+  { name: 'Legal Brief Assistant', description: 'Case law and document drafting.', category: 'Research', prompt: 'Draft legal summaries and analyze cases.', icon: 'briefcase' },
+  { name: 'Market Intelligence Scout', description: 'Competitor and trend analysis.', category: 'Research', prompt: 'Track competitors and market shifts.', icon: 'globe' },
+  { name: 'Expense Audit Bot', description: 'Scans receipts and logs expenses.', category: 'Operations', prompt: 'Audit expense reports and log to Sheets.', icon: 'check-square' },
+  { name: 'Supply Chain Tracker', description: 'Logistics and inventory monitoring.', category: 'Operations', prompt: 'Track logistics data and inventory levels.', icon: 'truck' },
+  { name: 'Travel Concierge', description: 'Itinerary planning and booking.', category: 'Operations', prompt: 'Plan travel itineraries and track flights.', icon: 'navigation' },
 ];
 
 async function ensureTemplates() {
   const existing = await prisma.agentTemplate.count();
-  if (existing > 0) return;
+  if (existing >= TEMPLATE_SEEDS.length) return;
+  
+  // Wipe and re-seed to ensure all 30 are there with correct names/categories
+  await prisma.agentTemplate.deleteMany();
   await prisma.agentTemplate.createMany({ data: TEMPLATE_SEEDS });
 }
 
-// GET /api/agents/templates
-router.get('/templates', authenticate, async (_req: AuthRequest, res: Response) => {
+// GET /api/agents/templates — List all pre-seeded templates
+router.get('/templates', authenticate, async (req: AuthRequest, res: Response) => {
   await ensureTemplates();
-  const templates = await prisma.agentTemplate.findMany({ orderBy: { createdAt: 'asc' } });
+  const templates = await prisma.agentTemplate.findMany();
   res.json({ templates });
 });
 
-// GET /api/agents
+// GET /api/agents — List user's created agents
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   const agents = await prisma.agent.findMany({
     where: { userId: req.user!.sub },
+    include: { template: true },
     orderBy: { createdAt: 'desc' },
   });
   res.json({ agents });
 });
 
-// GET /api/agents/:id
-router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
-  const agent = await prisma.agent.findFirst({
-    where: { id: req.params.id, userId: req.user!.sub },
-  });
-  if (!agent) {
-    res.status(404).json({ error: 'Agent not found' });
-    return;
-  }
-  res.json(agent);
-});
-
-// POST /api/agents
-router.post('/', authenticate, validate(AgentCreateSchema), async (req: AuthRequest, res: Response) => {
-  const data = req.body as z.infer<typeof AgentCreateSchema>;
+// POST /api/agents — Create a new agent from a template or scratch
+router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
+  const data = AgentSchema.parse(req.body);
+  
   const agent = await prisma.agent.create({
     data: {
       userId: req.user!.sub,
       name: data.name,
       description: data.description,
       templateId: data.templateId,
-      systemPrompt: data.systemPrompt,
-      provider: data.provider,
-      model: data.model,
-      temperature: data.temperature ?? 0.7,
-      maxTokens: data.maxTokens ?? 512,
-    },
-  });
-  await prisma.auditLog.create({
-    data: { userId: req.user!.sub, action: 'agent.created', targetType: 'agent', targetId: agent.id },
-  });
-  res.status(201).json(agent);
-});
-
-// PATCH /api/agents/:id
-router.patch('/:id', authenticate, validate(AgentUpdateSchema), async (req: AuthRequest, res: Response) => {
-  const agent = await prisma.agent.findFirst({
-    where: { id: req.params.id, userId: req.user!.sub },
-  });
-  if (!agent) {
-    res.status(404).json({ error: 'Agent not found' });
-    return;
-  }
-  const data = req.body as z.infer<typeof AgentUpdateSchema>;
-  const updated = await prisma.agent.update({
-    where: { id: agent.id },
-    data: {
-      name: data.name,
-      description: data.description,
-      templateId: data.templateId,
-      systemPrompt: data.systemPrompt,
-      provider: data.provider,
-      model: data.model,
+      provider: data.provider || 'openai',
+      model: data.model || 'gpt-4o',
       temperature: data.temperature,
       maxTokens: data.maxTokens,
     },
   });
-  await prisma.auditLog.create({
-    data: { userId: req.user!.sub, action: 'agent.updated', targetType: 'agent', targetId: agent.id },
-  });
-  res.json(updated);
-});
 
-// DELETE /api/agents/:id
-router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
-  const agent = await prisma.agent.findFirst({
-    where: { id: req.params.id, userId: req.user!.sub },
-  });
-  if (!agent) {
-    res.status(404).json({ error: 'Agent not found' });
-    return;
-  }
-  await prisma.agent.delete({ where: { id: agent.id } });
-  await prisma.auditLog.create({
-    data: { userId: req.user!.sub, action: 'agent.deleted', targetType: 'agent', targetId: agent.id },
-  });
-  res.status(204).send();
-});
-
-// POST /api/agents/:id/run
-router.post('/:id/run', authenticate, aiLimiter, validate(AgentRunSchema), async (req: AuthRequest, res: Response) => {
-  const agent = await prisma.agent.findFirst({
-    where: { id: req.params.id, userId: req.user!.sub },
-  });
-  if (!agent) {
-    res.status(404).json({ error: 'Agent not found' });
-    return;
-  }
-
-  const body = req.body as z.infer<typeof AgentRunSchema>;
-  const run = await prisma.run.create({
-    data: {
-      userId: req.user!.sub,
-      type: 'agent',
-      status: 'queued',
-      agentId: agent.id,
-      input: { input: body.input },
-      startedAt: new Date(),
-    },
-  });
-
-  try {
-    const { data } = await axios.post(
-      `${AI_URL}/ai/jobs`,
-      {
-        type: 'agent',
-        run_id: run.id,
-        user_id: req.user!.sub,
-        input: body.input,
-        use_memory: body.useMemory ?? true,
-        agent: {
-          id: agent.id,
-          name: agent.name,
-          system_prompt: agent.systemPrompt,
-          provider: body.provider || agent.provider,
-          model: body.model || agent.model,
-          temperature: body.temperature ?? agent.temperature,
-          max_tokens: body.maxTokens ?? agent.maxTokens,
-        },
-      },
-      { headers: aiHeaders() },
-    );
-
-    const updated = await prisma.run.update({
-      where: { id: run.id },
-      data: { jobId: data.job_id },
-    });
-    res.status(202).json(updated);
-  } catch (err: any) {
-    const status = err.response?.status || 502;
-    await prisma.run.update({
-      where: { id: run.id },
-      data: { status: 'failed', error: err.response?.data?.error || 'AI service error', completedAt: new Date() },
-    });
-    res.status(status).json({ error: err.response?.data?.error || 'AI service error' });
-  }
-});
-
-// GET /api/agents/:id/memory
-router.get('/:id/memory', authenticate, async (req: AuthRequest, res: Response) => {
-  try {
-    const { data } = await axios.get(
-      `${AI_URL}/ai/agents/${req.params.id}/memory/${req.user!.sub}`,
-      { headers: aiHeaders() },
-    );
-    res.json(data);
-  } catch (err: any) {
-    const status = err.response?.status || 502;
-    res.status(status).json({ error: err.response?.data?.error || 'AI service error' });
-  }
-});
-
-// DELETE /api/agents/:id/memory
-router.delete('/:id/memory', authenticate, async (req: AuthRequest, res: Response) => {
-  try {
-    await axios.delete(
-      `${AI_URL}/ai/agents/${req.params.id}/memory/${req.user!.sub}`,
-      { headers: aiHeaders() },
-    );
-    res.json({ message: 'Memory cleared' });
-  } catch (err: any) {
-    const status = err.response?.status || 502;
-    res.status(status).json({ error: err.response?.data?.error || 'AI service error' });
-  }
+  res.json({ agent });
 });
 
 export default router;
