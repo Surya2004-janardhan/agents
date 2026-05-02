@@ -25,22 +25,22 @@ const quickRoutes = [
 export default function HomePage() {
   return (
     <div className={`${styles.page} animate-fade-in`}>
-      <section className={`${styles.hero} tail-curve`}>
+      <section className={`${styles.hero} tail-curve animate-stagger stagger-1`}>
         <div className={styles.heroCopy}>
           <div className={styles.kicker}>
-            <span className={styles.badge}>Purr-fect Orchestration</span>
+            <span className={`${styles.badge} pulse`}>Purr-fect Orchestration</span>
             <span>Unleash the curiosity of AI</span>
           </div>
-          <h1 className={`${styles.title} cat-ear`}>Meooww.</h1>
+          <h1 className={`${styles.title} cat-ear`}>The Future is Meooww.</h1>
           <p className={styles.subtitle}>
-            The future of agentic workflows is here. Automated, multi-tasking, 
-            and built with persistent feline-like memory.
+            Deploy <strong>Free AI Agents</strong> and orchestrate <strong>Free AI Flows</strong>. 
+            Automate your world with persistent feline-like memory.
           </p>
           <div className={styles.heroActions}>
-            <Link href="/agents" className={styles.primaryButton}>
+            <Link href="/agents" className={`${styles.primaryButton} magnetic`}>
               Launch Agents 🐾
             </Link>
-            <Link href="/workflows" className={styles.secondaryButton}>
+            <Link href="/workflows" className={`${styles.secondaryButton} magnetic`}>
               Explore Workflows
             </Link>
           </div>

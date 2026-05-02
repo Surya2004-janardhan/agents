@@ -68,8 +68,13 @@ import { startWorker } from './worker';
 
 async function bootstrap() {
   await connectRedis();
-  await connectQueue();
-  await startWorker();
+  
+  try {
+    await connectQueue();
+    await startWorker();
+  } catch (error) {
+    console.error('[Queue/Worker] Initial connection failed, but API is running. Retrying in background...', error);
+  }
   
   app.listen(PORT, () => {
     console.log(`[node-backend] listening on :${PORT}`);

@@ -52,7 +52,7 @@
 }
 
 .title {
-  font-size: clamp(3rem, 10vw, 5.5rem);
+  font-size: clamp(2.5rem, 8vw, 5rem);
   line-height: 1;
   font-weight: 800;
   color: var(--text-primary);
@@ -60,9 +60,9 @@
 }
 
 .subtitle {
-  font-size: 1.5rem;
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
   max-width: 650px;
   margin: 0 auto;
 }
@@ -72,23 +72,24 @@
   gap: 20px;
   justify-content: center;
   margin-top: 32px;
+  flex-wrap: wrap;
 }
 
 /* Buttons */
 .primaryButton {
   background: var(--accent-primary);
   color: #fff;
-  padding: 20px 40px;
+  padding: 18px 36px;
   border-radius: var(--radius-md);
   font-weight: 700;
-  font-size: 1.1rem;
-  box-shadow: 0 10px 20px rgba(249, 115, 22, 0.2);
-  border-bottom: 4px solid #c2410c;
+  font-size: 1rem;
+  box-shadow: 0 10px 20px rgba(74, 103, 65, 0.2);
+  border-bottom: 4px solid #2d3e28;
 }
 
 .primaryButton:hover {
   transform: translateY(-2px);
-  background: #ea580c;
+  background: #3a5133;
   border-bottom-width: 2px;
   margin-bottom: 2px;
 }
@@ -96,11 +97,11 @@
 .secondaryButton {
   background: #fff;
   color: var(--text-primary);
-  padding: 20px 40px;
+  padding: 18px 36px;
   border-radius: var(--radius-md);
   font-weight: 700;
   border: 2px solid var(--accent-primary);
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .secondaryButton:hover {
@@ -121,95 +122,73 @@
   align-items: flex-end;
   border-bottom: 2px solid var(--bg-tertiary);
   padding-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .sectionLabel {
   color: var(--accent-secondary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.2em;
 }
 
 .sectionTitle {
-  font-size: 3rem;
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
   font-weight: 800;
   color: var(--text-primary);
-}
-
-.pill {
-  background: var(--accent-vibrant);
-  padding: 10px 24px;
-  border-radius: var(--radius-full);
-  font-size: 0.9rem;
-  color: #000;
-  font-weight: 700;
-  box-shadow: 0 4px 10px rgba(251, 191, 36, 0.3);
 }
 
 /* Grid */
 .grid3 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 32px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
 }
 
 .routeCard {
-  padding: 48px;
+  padding: 32px;
   border-radius: var(--radius-md);
   transition: all var(--transition-slow);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   background: #fff;
   border: 2px solid var(--bg-tertiary);
-  position: relative;
-  overflow: hidden;
 }
 
 .routeCard:hover {
   border-color: var(--accent-primary);
-  transform: translateY(-12px);
-  box-shadow: 0 30px 60px rgba(249, 115, 22, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(74, 103, 65, 0.1);
 }
 
 .routeTitle {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--text-primary);
 }
 
 .cardText {
   color: var(--text-secondary);
-  line-height: 1.7;
-  font-size: 1.1rem;
+  line-height: 1.6;
+  font-size: 1rem;
 }
 
-.tagRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: auto;
-}
-
-.tag {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--accent-primary);
-  background: var(--bg-tertiary);
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
-}
-
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .page {
-    padding: 60px 20px;
+    padding: 40px 16px;
+    gap: 60px;
   }
-  .title {
-    font-size: 3.5rem;
+  .hero {
+    padding: 60px 16px;
   }
   .heroActions {
     flex-direction: column;
+    width: 100%;
+  }
+  .primaryButton, .secondaryButton {
     width: 100%;
   }
 }

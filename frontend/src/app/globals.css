@@ -1,36 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Bright Catty Palette */
-  --bg-primary: #fffcf9; /* Warm Cream */
+  /* Forest Cat Palette (Organic & Sophisticated) */
+  --bg-primary: #fdf8eb; /* Warm Cream */
   --bg-secondary: #ffffff;
-  --bg-tertiary: #fdf2f0; /* Soft Peach */
+  --bg-tertiary: #e3d5b8; /* Beige */
   
   /* Accents */
-  --accent-primary: #f97316; /* Vibrant Orange */
-  --accent-secondary: #fb7185; /* Soft Rose */
-  --accent-vibrant: #fbbf24; /* Sunset Gold */
-  --accent-success: #10b981;
+  --accent-primary: #4a6741; /* Forest Green */
+  --accent-secondary: #94b484; /* Sage Green */
+  --accent-vibrant: #fbbf24; /* Sunset Gold (for warnings/highlights) */
+  --accent-success: #4a6741;
   --accent-warning: #f59e0b;
   --accent-error: #ef4444;
   
   /* Text */
-  --text-primary: #1e293b; /* Dark Slate */
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  --text-primary: #2d3e28; /* Deep Forest Black */
+  --text-secondary: #4a6741;
+  --text-muted: #94b484;
   
-  /* Glassmorphism (Bright Edition) */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(249, 115, 22, 0.1);
-  --glass-glow: rgba(249, 115, 22, 0.05);
+  /* Glassmorphism (Forest Edition) */
+  --glass-bg: rgba(253, 248, 235, 0.85);
+  --glass-border: rgba(74, 103, 65, 0.1);
+  --glass-glow: rgba(148, 180, 132, 0.1);
   
   /* Shadows & Radius */
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 10px 15px -3px rgba(249, 115, 22, 0.1);
-  --shadow-lg: 0 20px 25px -5px rgba(249, 115, 22, 0.1);
+  --shadow-sm: 0 4px 6px -1px rgba(74, 103, 65, 0.05);
+  --shadow-md: 0 10px 15px -3px rgba(74, 103, 65, 0.1);
+  --shadow-lg: 0 20px 25px -5px rgba(74, 103, 65, 0.1);
   --radius-sm: 16px;
   --radius-md: 24px;
-  --radius-lg: 40px; /* Extra rounded for catty feel */
+  --radius-lg: 40px;
   --radius-full: 9999px;
 
   /* Animation */
@@ -52,8 +52,8 @@ html {
 body {
   background-color: var(--bg-primary);
   background-image: 
-    radial-gradient(circle at 10% 10%, rgba(249, 115, 22, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 90% 90%, rgba(251, 113, 133, 0.05) 0%, transparent 40%);
+    radial-gradient(circle at 10% 10%, rgba(148, 180, 132, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(74, 103, 65, 0.05) 0%, transparent 40%);
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -70,7 +70,6 @@ h1, h2, h3, h4, h5, h6 {
 
 /* --- Meooww Specific Components --- */
 
-/* Cat-Ear Header */
 .cat-ear {
   position: relative;
   display: inline-block;
@@ -81,14 +80,13 @@ h1, h2, h3, h4, h5, h6 {
   top: -15px;
   width: 20px;
   height: 20px;
-  background: var(--accent-primary);
+  background: var(--accent-secondary);
   clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
   border-radius: 4px;
 }
 .cat-ear::before { left: 0; transform: rotate(-15deg); }
 .cat-ear::after { right: 0; transform: rotate(15deg); }
 
-/* Whiskers Divider */
 .whiskers {
   display: flex;
   align-items: center;
@@ -100,21 +98,19 @@ h1, h2, h3, h4, h5, h6 {
   content: '';
   height: 2px;
   flex: 1;
-  background: linear-gradient(to right, transparent, var(--accent-primary), transparent);
+  background: linear-gradient(to right, transparent, var(--accent-secondary), transparent);
   border-radius: 2px;
 }
 
-/* Paw Print Background */
 .paw-bg {
-  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 16C13.6569 16 15 14.6569 15 13C15 11.3431 13.6569 10 12 10C10.3431 10 9 11.3431 9 13C9 14.6569 10.3431 16 12 16Z' fill='rgba(249, 115, 22, 0.03)'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5' fill='rgba(249, 115, 22, 0.03)'/%3E%3Ccircle cx='12' cy='7' r='1.5' fill='rgba(249, 115, 22, 0.03)'/%3E%3Ccircle cx='15.5' cy='8.5' r='1.5' fill='rgba(249, 115, 22, 0.03)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 16C13.6569 16 15 14.6569 15 13C15 11.3431 13.6569 10 12 10C10.3431 10 9 11.3431 9 13C9 14.6569 10.3431 16 12 16Z' fill='rgba(74, 103, 65, 0.03)'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5' fill='rgba(74, 103, 65, 0.03)'/%3E%3Ccircle cx='12' cy='7' r='1.5' fill='rgba(74, 103, 65, 0.03)'/%3E%3Ccircle cx='15.5' cy='8.5' r='1.5' fill='rgba(74, 103, 65, 0.03)'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
 
-/* Glassmorphism Bright */
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
-  border: 2px solid var(--bg-primary);
+  border: 2px solid var(--bg-secondary);
   box-shadow: var(--shadow-md);
   border-radius: var(--radius-md);
 }
@@ -125,7 +121,57 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--accent-primary);
 }
 
-/* Tail-Curve Border */
 .tail-curve {
   border-radius: 40px 10px 40px 40px;
+}
+
+/* Zero-Delay Interactions */
+a, button {
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  outline: none;
+}
+
+a:active, button:active {
+  transform: scale(0.96) translateY(1px) !important;
+  transition: transform 0.05s ease !important;
+}
+
+/* Magnetic Hover Utility */
+.magnetic:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Staggered Entrance Animations */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-stagger {
+  animation: slideUpFade 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+
+/* Pulse Glow for setup/warnings */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 0 rgba(148, 180, 132, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(148, 180, 132, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(148, 180, 132, 0); }
+}
+
+.pulse {
+  animation: pulseGlow 2s infinite;
 }
