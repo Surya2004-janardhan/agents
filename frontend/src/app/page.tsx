@@ -25,38 +25,37 @@ const quickRoutes = [
 export default function HomePage() {
   return (
     <div className={`${styles.page} animate-fade-in`}>
-      <section className={styles.hero}>
+      <section className={`${styles.hero} tail-curve`}>
         <div className={styles.heroCopy}>
           <div className={styles.kicker}>
-            <span className={styles.badge}>Next-Gen Orchestration</span>
-            <span>Unleash the power of persistent memory</span>
+            <span className={styles.badge}>Purr-fect Orchestration</span>
+            <span>Unleash the curiosity of AI</span>
           </div>
-          <h1 className={styles.title}>The Future of Agentic Workflows.</h1>
+          <h1 className={`${styles.title} cat-ear`}>Meooww.</h1>
           <p className={styles.subtitle}>
-            A premium workbench for deploying approved agents, scaling curated workflows, and managing 
-            intelligent schedules with the power of long-term adaptive memory.
+            The future of agentic workflows is here. Automated, multi-tasking, 
+            and built with persistent feline-like memory.
           </p>
           <div className={styles.heroActions}>
             <Link href="/agents" className={styles.primaryButton}>
-              Launch Agents
+              Launch Agents 🐾
             </Link>
             <Link href="/workflows" className={styles.secondaryButton}>
               Explore Workflows
-            </Link>
-            <Link href="/schedule" className={styles.ghostButton}>
-              Configure Cron
             </Link>
           </div>
         </div>
       </section>
 
+      <div className="whiskers" />
+
       <section className={styles.sectionCard}>
         <div className={styles.sectionHeader}>
           <div>
             <div className={styles.sectionLabel}>Operations</div>
-            <h2 className={styles.sectionTitle}>Precision Control</h2>
+            <h2 className={styles.sectionTitle}>Feline Control</h2>
           </div>
-          <span className={styles.pill}>Unified Navigation</span>
+          <span className={styles.pill}>Unified Dashboard</span>
         </div>
 
         <div className={styles.grid3}>

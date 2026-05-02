@@ -17,11 +17,11 @@
   max-width: 1200px;
   padding: 12px 24px;
   border-radius: var(--radius-full);
-  background: rgba(12, 12, 18, 0.7);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  border: 2px solid #fff;
+  box-shadow: var(--shadow-md);
 }
 
 .brand {
@@ -35,34 +35,26 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  background: var(--accent-primary);
   flex: none;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.3);
   position: relative;
-}
-
-.brandMark::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: 11px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
 }
 
 .brandName {
   display: block;
-  color: #fff;
+  color: var(--text-primary);
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 1.25rem;
-  letter-spacing: -0.02em;
+  font-size: 1.5rem;
+  letter-spacing: -0.04em;
 }
 
 .brandTag {
   display: block;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .nav {
@@ -81,30 +73,29 @@
 }
 
 .navLink:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--accent-primary);
+  background: var(--bg-tertiary);
 }
 
 .navLinkActive {
-  color: var(--accent-primary);
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.1);
+  color: #fff;
+  background: var(--accent-primary);
+  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.2);
 }
 
 .navLinkActive .navHint {
-  color: var(--accent-primary);
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .navLabel {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .navHint {
   font-size: 0.7rem;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -125,7 +116,7 @@
   }
   
   .navLabel {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
   
   .navHint {

@@ -18,7 +18,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} paw-bg`}>
       <header className={styles.navbar}>
         <Link href="/" className={styles.brand}>
           <img src="/assets/logo.png" alt="Meooww Logo" className={styles.brandMark} style={{ width: '32px', height: '32px', borderRadius: '8px' }} />

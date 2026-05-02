@@ -63,10 +63,16 @@ app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
+import { connectQueue } from './queue/amqp';
+import { startWorker } from './worker';
+
 async function bootstrap() {
   await connectRedis();
+  await connectQueue();
+  await startWorker();
+  
   app.listen(PORT, () => {
-    console.log(`[node-api] listening on :${PORT}`);
+    console.log(`[node-backend] listening on :${PORT}`);
   });
 }
 
